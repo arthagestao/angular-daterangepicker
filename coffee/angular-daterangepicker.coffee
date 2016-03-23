@@ -28,6 +28,21 @@ picker.directive 'dateRangePicker', ($compile, $timeout, $parse, $q, $injector, 
 
     el = $(element)
     customOpts = $scope.opts
+    opts = null
+
+    # Formatter should return just the string value of the input
+    # It is used for comparison of if we should re-render
+    modelCtrl.$formatters.push (objValue) ->
+      f = (date) ->
+        if not moment.isMoment(date)
+        then moment(date).format(opts.locale.format)
+        else date.format(opts.locale.format)
+
+      if opts and opts.singleDatePicker and objValue
+        f(objValue)
+      else if opts and objValue.startDate
+        [f(objValue.startDate), f(objValue.endDate)].join(opts.locale.separator)
+      else ''
 
     _doLink = (config) ->
       opts = _mergeOpts({}, config, customOpts)
@@ -63,20 +78,6 @@ picker.directive 'dateRangePicker', ($compile, $timeout, $parse, $q, $injector, 
 
       _validateMin = _validate (min, start) -> min.isBefore(start) or min.isSame(start, 'day')
       _validateMax = _validate (max, end) -> max.isAfter(end) or max.isSame(end, 'day')
-
-      # Formatter should return just the string value of the input
-      # It is used for comparison of if we should re-render
-      modelCtrl.$formatters.push (objValue) ->
-        f = (date) ->
-          if not moment.isMoment(date)
-          then moment(date).format(opts.locale.format)
-          else date.format(opts.locale.format)
-
-        if opts.singleDatePicker and objValue
-          f(objValue)
-        else if objValue.startDate
-          [f(objValue.startDate), f(objValue.endDate)].join(opts.locale.separator)
-        else ''
 
       # Render should update the date picker start/end dates as necessary
       # It should also set the input element's val with $viewValue as we don't let the rangepicker do this
