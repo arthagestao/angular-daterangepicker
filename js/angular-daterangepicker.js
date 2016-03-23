@@ -23,7 +23,7 @@
         clearable: '='
       },
       link: function($scope, element, attrs, modelCtrl) {
-        var _config, _doLink, _mergeOpts, customOpts, el;
+        var _config, _doLink, _mergeOpts, customOpts, el, opts;
         _mergeOpts = function() {
           var extend, localeExtend;
           localeExtend = angular.extend.apply(angular, Array.prototype.slice.call(arguments).map(function(opt) {
@@ -37,8 +37,26 @@
         };
         el = $(element);
         customOpts = $scope.opts;
+        opts = null;
+        modelCtrl.$formatters.push(function(objValue) {
+          var f;
+          f = function(date) {
+            if (!moment.isMoment(date)) {
+              return moment(date).format(opts.locale.format);
+            } else {
+              return date.format(opts.locale.format);
+            }
+          };
+          if (opts && opts.singleDatePicker && objValue) {
+            return f(objValue);
+          } else if (opts && objValue.startDate) {
+            return [f(objValue.startDate), f(objValue.endDate)].join(opts.locale.separator);
+          } else {
+            return '';
+          }
+        });
         _doLink = function(config) {
-          var _clear, _init, _initBoundaryField, _picker, _setDatePoint, _setEndDate, _setStartDate, _validate, _validateMax, _validateMin, opts;
+          var _clear, _init, _initBoundaryField, _picker, _setDatePoint, _setEndDate, _setStartDate, _validate, _validateMax, _validateMin;
           opts = _mergeOpts({}, config, customOpts);
           _picker = null;
           _clear = function() {
@@ -80,23 +98,6 @@
           });
           _validateMax = _validate(function(max, end) {
             return max.isAfter(end) || max.isSame(end, 'day');
-          });
-          modelCtrl.$formatters.push(function(objValue) {
-            var f;
-            f = function(date) {
-              if (!moment.isMoment(date)) {
-                return moment(date).format(opts.locale.format);
-              } else {
-                return date.format(opts.locale.format);
-              }
-            };
-            if (opts.singleDatePicker && objValue) {
-              return f(objValue);
-            } else if (objValue.startDate) {
-              return [f(objValue.startDate), f(objValue.endDate)].join(opts.locale.separator);
-            } else {
-              return '';
-            }
           });
           modelCtrl.$render = function() {
             if (modelCtrl.$modelValue && modelCtrl.$modelValue.startDate) {
