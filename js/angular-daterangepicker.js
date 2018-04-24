@@ -37,7 +37,7 @@
         };
         el = $(element);
         customOpts = $scope.opts;
-        opts = _mergeOpts({}, dateRangePickerConfig, customOpts);
+        opts = _mergeOpts({}, angular.copy(dateRangePickerConfig), customOpts);
         _picker = null;
         _clear = function() {
           _picker.setStartDate();
@@ -90,7 +90,7 @@
           };
           if (opts.singleDatePicker && objValue) {
             return f(objValue);
-          } else if (objValue.startDate) {
+          } else if (objValue && objValue.startDate) {
             return [f(objValue.startDate), f(objValue.endDate)].join(opts.locale.separator);
           } else {
             return '';
@@ -132,11 +132,15 @@
           var eventType, results;
           el.daterangepicker(angular.extend(opts, {
             autoUpdateInput: false
-          }), function(start, end) {
+          }));
+          el.on('apply.daterangepicker', function(ev, picker) {
             return $scope.$apply(function() {
-              return $scope.model = opts.singleDatePicker ? start : {
-                startDate: start,
-                endDate: end
+              var newEndDate, newStartDate;
+              newStartDate = picker.startDate;
+              newEndDate = picker.endDate;
+              return $scope.model = opts.singleDatePicker ? newStartDate : {
+                startDate: newStartDate,
+                endDate: newEndDate
               };
             });
           });
